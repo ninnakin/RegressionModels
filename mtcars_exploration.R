@@ -44,3 +44,6 @@ grid.arrange(g1, g2, ncol=2)
 fit_new<-lm(mpg_adjusted~. -wt -mpg-adjusted, mtcars)
 # only 1 significant variable (disp), and that one has only a small effect
 
+# look at residuals and outliers from fitting agains weight
+plot(fitall)
+plot (fit_new)
