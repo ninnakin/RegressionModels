@@ -1,0 +1,72 @@
+---
+title: "Regression models - Factors impacting miles per gallon"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+  word_document: default
+---
+## Context
+
+You work for Motor Trend, a magazine about the automobile industry. Looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions:
+
+"Is an automatic or manual transmission better for MPG"
+"Quantify the MPG difference between automatic and manual transmissions"
+
+### Question
+
+Take the mtcars data set and write up an analysis to answer their question using regression models and exploratory data analyses.
+
+### Points to be evaluated
+
+- Did the student interpret the coefficients correctly?
+- Did the student interpret the coefficients correctly?
+- Did the student fit multiple models and detail their strategy for model selection?
+- Did the student answer the questions of interest or detail why the question(s) is (are) not answerable?
+- Did the student do a residual plot and some diagnostics?
+- Did the student quantify the uncertainty in their conclusions and/or perform an inference correctly?
+
+## Executive summary
+
+
+
+
+## Exploratory analysis
+```{r transformations, echo=FALSE, fig.height=4, fig.width=8}
+data("mtcars")
+
+mtcars$transm <- as.factor(mtcars$am)
+levels(mtcars$transm)<-c("Automatic","Manual")
+mtcars$vs <- as.factor(mtcars$vs)
+```
+
+```{r exploratory, echo=FALSE, fig.height=4, fig.width=8}
+library(ggplot2)
+library(GGally)
+summary(mtcars)
+str(mtcars)
+ggplot(data=mtcars, aes(x=transm, y=mpg, fill=transm))+geom_boxplot()
+ggplot(data=mtcars, aes(x=transm, y=mpg, fill=transm))+geom_violin()
+
+ggplot(data=mtcars, aes(x=transm, y=mpg, fill=transm))+geom_boxplot()+facet_grid(.~cyl)
+ggplot(data=mtcars, aes(x=transm, y=mpg, fill=transm))+geom_violin()+facet_grid(.~cyl)
+
+manual <- subset(mtcars, transm=="Manual")
+automatic <- subset(mtcars, transm=="Automatic")
+
+#regress against all variables to see which coefficients are the most important
+coeffs<-lm(data=mtcars, mpg~transm+cyl+disp+hp+wt+qsec+vs+gear+carb)$coeff
+#largest impact is by weight, second largest by weight
+barplot(abs(coeffs[-1]), col="salmon")
+
+
+# do pair plot 6
+ggpairs(mtcars[,c(-9,-12)], colour=mtcars$transm)
+
+#try: remove effect of weight (and other variables) to better look at effect of transmission 
+# for cras with same weight, what is the effect of transmission? 
+
+``` 
+
+
+## Testing of mpg difference between automatic and manual transmissions
