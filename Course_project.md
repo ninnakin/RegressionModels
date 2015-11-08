@@ -45,14 +45,17 @@ I performed an exploratory analysis to investigate the properties of the data an
 
 ![](Course_project_files/figure-html/explore_transmission-1.png) 
 
-At first glance, it seems that transmission type has a clear effect on the fuel consumption. But it is possible that this apparent connection is driven by other properties of the cars. Figure X shows the relationship between weight and fuel consumption. As shown by the previous plot, fuel consumption for automatic cars (pink dots) is higher than that of manual cars, but we can also see that automatic cars tend to be heavier than manual cars. In fact, automatic cars do not seem to have higher fuel consumption than manual cars of similar weight. The black line shows the result of fitting a linear regression model for mpg depending only on weight. This simple model seems to capture the patterns for both automatic and manual cars reasonably well, but are there other traits of the data that could tell us more about the mpg?
+At first glance, it seems that transmission type has a clear effect on the fuel consumption. But it is possible that this apparent connection is driven by other properties of the cars. Figure X shows the relationship between weight and fuel consumption. As shown by the previous plot, fuel consumption for automatic cars (pink dots) is higher than that of manual cars, but we can also see that automatic cars tend to be heavier than manual cars. We can see from the weight histogram that automatic cars are heavier than manual cars, with only a small oiverlap in weight. 
+
+Taking this into account, automatic cars do not seem to have higher fuel consumption than manual cars of similar weight. The black line shows the result of fitting a linear regression model for mpg depending only on weight. This simple model seems to capture the patterns for both automatic and manual cars reasonably well, but are there other traits of the data that could tell us more about the mpg?
 
 ![](Course_project_files/figure-html/explore_weight-1.png) 
 
 From the plots exploring the relationship between the different variables and mpg I can not dismiss a relationship between any of them and mpg, but I can also not be sure of any relationships. Both number of cylinders and and engine type (V/S) look related to mpg when looking at them alone, but when also considering weight, it is not so clear anymore.   
 
-
 ![](Course_project_files/figure-html/explore_cylinders-1.png) 
+
+![](Course_project_files/figure-html/explore_vs-1.png) 
 
 The following 6 figures explore the relationship between mpg and the remaining 6 variables, displacement, horse power, read axle ratio, qsec, number of gears and number of carburetors. I have also computed the correlation between each variable and weight. Again, pink dots represent cars with automatic transmission and blue ones those with manual transmission. 
 
@@ -89,7 +92,7 @@ fit_wt_am | weight \* transmissiontype| 83|0.0026919
 fit_wt_am_qsec | weight \* transmissiontype + qsec| 90|0.0019822
 fit_wt_am_all | weight \* transmissiontype + all remaining variables| 90|0.9939286
 
-We can see from this analysis that there is no evidence that including all variables gives us a more accurate model than the one we get when including only weight, transmission type and qsec. It can be noted that they both have an R-squared of 90%. Based on these results, I will select model number three. The coefficients of this model are:
+We can see from this analysis that there is no evidence that including all variables gives us a more accurate model than the one we get when including only weight, transmission type and qsec. It can be noted that they both have an R-squared of 90%. Since both model number 3 and 4 explain the same amount of variance there is no reason to believe that adding more variables to the model would improve it and I will select model number three. The coefficients of this model are:
 
 
                 Estimate   Std. Error     t value    Pr(>|t|)
@@ -99,6 +102,8 @@ wt             -2.936531    0.6660253   -4.409038   0.0001489
 amManual       14.079428    3.4352512    4.098515   0.0003409
 qsec            1.016974    0.2520152    4.035366   0.0004030
 wt:amManual    -4.141376    1.1968119   -3.460340   0.0018086
+
+Showing that a greater value of qsec (acceleration) will increase fuel consumption. As in model 2, we see that the connection between MPG and transmission type depends on the weight of the car. For automatic cars, MPG decreases with  -2.94 for every 1000 lb increase in weight, and for manual cars MPG decreases with -7.08 for every 1000 lb increase. 
 
 ## Is there a significant difference in mpg between automatic and manual transmission cars
 
@@ -123,8 +128,7 @@ TODO:
 
 - Investigate outliers? 
 - Remove effect of weight and plot mpg for automatic/manual to show that we can't see a difference 
-- Write executive summary
-- Expand on the diagnostocs of the model
+- Expand on the diagnostics of the model
 
 
 

@@ -1,30 +1,11 @@
 ---
 title: "Factors impacting miles per gallon - a regression analysis"
 output:
+  word_document: default
+  pdf_document: default
   html_document:
     keep_md: yes
-  pdf_document: default
-  word_document: default
 ---
-## Context
-
-You work for Motor Trend, a magazine about the automobile industry. Looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions:
-
-"Is an automatic or manual transmission better for MPG"
-"Quantify the MPG difference between automatic and manual transmissions"
-
-### Question
-
-Take the mtcars data set and write up an analysis to answer their question using regression models and exploratory data analyses.
-
-### Points to be evaluated
-
-- Did the student interpret the coefficients correctly?
-- Did the student fit multiple models and detail their strategy for model selection?
-- Did the student answer the questions of interest or detail why the question(s) is (are) not answerable?
-- Did the student do a residual plot and some diagnostics?
-- Did the student quantify the uncertainty in their conclusions and/or perform an inference correctly?
-
 ## Executive summary
 
 Though there is a difference in fuel consumption between automatic cars, this difference is explained by automatic cars being heavier than manual cars. The impact of the type of transmission for cars of the same weight is neglible for the analysed cars. If one wants to maximize miles per gallon focus should be layed on decreasing the weight of the car. 
@@ -37,7 +18,7 @@ I have explored the mtcars data set, a data set containing information on fuel c
 - Gross horsepower (hp)
 - Rear axle ratio 
 - Weight (lb/1000)
-- qseq 1/4 mile time
+- Acceleration, qsec 1/4 mile time
 - Type of engine (straight or V-engine)
 - Automatic or manual transmission
 - Number of forward gears
@@ -58,72 +39,53 @@ levels(mtcars$vs)<-c("V","S")
 ## Exploratory analysis
 I performed an exploratory analysis to investigate the properties of the data and get a first insight into what affects the fuel consumption and the differences between automatic and manual transmission. 
 
-```{r explore_transmission, echo=FALSE, fig.height=4, fig.width=5, warning=FALSE, message=FALSE}
+At first glance (Figure 1), it seems that transmission type has a clear effect on the fuel consumption. But it is possible that this apparent connection is driven by other properties of the cars. Figure 2 shows the relationship between weight and fuel consumption. As shown by the previous plot, fuel consumption for automatic cars (pink dots) is higher than that of manual cars, but we can also see that automatic cars tend to be heavier than manual cars. We can see from the weight histogram (Figure 3) that automatic cars are heavier than manual cars, with only a small overlap in weight. 
+
+```{r explore_transmission, echo=FALSE, fig.height=2.5, fig.width=3.5, warning=FALSE, message=FALSE}
 library(ggplot2)
 library(GGally)
 library(dplyr)
-#summary(mtcars)
-#str(mtcars)
-ggplot(data=mtcars, aes(x=am, y=mpg, fill=am))+geom_boxplot()
-#ggplot(data=mtcars, aes(x=am, y=mpg, fill=am))+geom_violin()
 
-#ggplot(data=mtcars, aes(x=am, y=mpg, fill=am))+geom_boxplot()+facet_grid(.~cyl)
-#ggplot(data=mtcars, aes(x=am, y=mpg, fill=am))+geom_violin()+facet_grid(.~cyl)
-
-manual <- subset(mtcars, am=="Manual")
-automatic <- subset(mtcars, am=="Automatic")
-
-#regress against all variables to see which coefficients are the most important
-#coeffs<-lm(data=mtcars, mpg~am+cyl+disp+hp+wt+qsec+vs+gear+carb)$coeff
-#largest impact is by weight, second largest by weight
-#barplot(abs(coeffs[-1]), col="salmon")
-
-
-# do pair plot 6
-# ggpairs(mtcars[,c(-9,-12)], colour=mtcars$am)
-
-#try: remove effect of weight (and other variables) to better look at effect of transmission 
-# for cras with same weight, what is the effect of transmission? 
-
+ggplot(data=mtcars, aes(x=am, y=mpg, fill=am))+geom_boxplot()+ggtitle("MPG by transmission type")
 ``` 
 
-At first glance, it seems that transmission type has a clear effect on the fuel consumption. But it is possible that this apparent connection is driven by other properties of the cars. Figure X shows the relationship between weight and fuel consumption. As shown by the previous plot, fuel consumption for automatic cars (pink dots) is higher than that of manual cars, but we can also see that automatic cars tend to be heavier than manual cars. In fact, automatic cars do not seem to have higher fuel consumption than manual cars of similar weight. The black line shows the result of fitting a linear regression model for mpg depending only on weight. This simple model seems to capture the patterns for both automatic and manual cars reasonably well, but are there other traits of the data that could tell us more about the mpg?
+Taking this into account, automatic cars do not seem to have higher fuel consumption than manual cars of similar weight. The black line shows the result of fitting a linear regression model for mpg depending only on weight. This simple model seems to capture the patterns for both automatic and manual cars reasonably well, but are there other traits of the data that could tell us more about the mpg?
 
-```{r explore_weight, echo=FALSE, fig.height=3.5, fig.width=8, message=FALSE}
+```{r explore_weight, echo=FALSE, fig.height=2.5, fig.width=8, message=FALSE}
 library(gridExtra)
 fit_wt<-lm(mpg~wt, mtcars)
 
-g1 <- ggplot(data=mtcars,aes(x=wt, y=mpg, color=am))+geom_point(size=3)+ 
+g1 <- ggplot(data=mtcars,aes(x=wt, y=mpg, color=am))+geom_point(size=2)+ 
     geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)+
     ggtitle("MPG by weight")+theme(legend.position="none")
 
 g2<-ggplot(data=mtcars, aes(x=wt, fill=am))+geom_histogram(col=1, binwidth=0.25)+ggtitle("Weight distribution")
 
 grid.arrange(g1, g2, ncol=2)
-
 ``` 
 
 From the plots exploring the relationship between the different variables and mpg I can not dismiss a relationship between any of them and mpg, but I can also not be sure of any relationships. Both number of cylinders and and engine type (V/S) look related to mpg when looking at them alone, but when also considering weight, it is not so clear anymore.   
 
-
-```{r explore_cylinders, echo=FALSE, fig.height=6, fig.width=6, warning=FALSE, message=FALSE}
-# How to check which variables have influence on mpg? plot? check covariance? fit regressions with each?
+```{r explore_cylinders, echo=FALSE, fig.height=2.5, fig.width=8, warning=FALSE, message=FALSE}
 g1<-ggplot(data=mtcars,aes(x=wt, y=mpg, color=as.factor(cyl)))+geom_point(size=2)+ 
     geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)
 g2<-ggplot(data=mtcars, aes(x=as.factor(cyl), y=mpg, fill=as.factor(cyl)))+geom_boxplot()+theme(legend.position="none")
 
+grid.arrange(g2, g1, ncol=2)
+``` 
 
+```{r explore_vs, echo=FALSE, fig.height=2.5, fig.width=8, warning=FALSE, message=FALSE}
 g3<-ggplot(data=mtcars,aes(x=wt, y=mpg, color=vs))+geom_point(size=2)+ 
     geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)
 g4<-ggplot(data=mtcars, aes(x=vs, y=mpg, fill=vs))+geom_boxplot()+
     theme(legend.position="none")
 
-grid.arrange(g2, g1, g4, g3, ncol=2)
+grid.arrange(g4, g3, ncol=2)
 ``` 
 
 The following 6 figures explore the relationship between mpg and the remaining 6 variables, displacement, horse power, read axle ratio, qsec, number of gears and number of carburetors. I have also computed the correlation between each variable and weight. Again, pink dots represent cars with automatic transmission and blue ones those with manual transmission. 
 
-```{r explore_remaining, echo=FALSE, fig.height=6, fig.width=7, warning=FALSE, message=FALSE}
+```{r explore_remaining, echo=FALSE, fig.height=5, fig.width=8, warning=FALSE, message=FALSE}
 
 n<-names(mtcars)
 wt_cor <- sapply(n[!n=="am" & !n=="wt"], function(x) round(cor(mtcars$wt, as.numeric(mtcars[,x] )),2))
@@ -154,21 +116,21 @@ grid.arrange(g1, g2, g3, g4, g5, g6, ncol=3)
 
 ## Finding a representative model of the data 
 
-Based on the strong relationship between weight and mpg identified, I will construct a linear regression model of mpg depending on weight. This is the same model already used in the exploratory analysis, and as we saw in that section, it gives us a negative relationship (slope = `r round(summary(fit_wt)$coef[2])`) between the mpg and weight. The R-squared for this model is `r round(summary(fit_wt)$r.squared,2)`. We can interpret this as 'weight explains `r 100*round(summary(fit_wt)$r.squared,2)`% of the variance of mpg in the data'.  
+Based on the strong relationship between weight and MPG identified, I constructed a linear regression model of mpg depending on weight. This is the same model already used in the exploratory analysis, and as we saw in that section, it gives us a negative relationship (slope = `r round(summary(fit_wt)$coef[2])`) between the MPG and weight. The R-squared for this model is `r round(summary(fit_wt)$r.squared,2)`. We can interpret this as 'weight explains `r 100*round(summary(fit_wt)$r.squared,2)`% of the variance of MPG in the data'.  
 
 ```{r wt_model, echo=FALSE, fig.height=4, fig.width=8}
 library(knitr)
 fit_am <- lm(mpg~am, mtcars)
 fit_wt<-lm(mpg~wt, mtcars)
-kable(summary(fit_wt)$coef)
+#kable(summary(fit_wt)$coef)
 
 fit_wt_am <- lm(mpg~wt*am, mtcars)
 ``` 
 
-I will now investigate if adding an interaction term between weight and transmission type to this model will improve it. The characteristics for this model can be seen in table 2. This model indicates that the relationship between weight and mpg is different between automatic and manual cars, with a stronger negative relationship for manual transmission cars. The R-squared now increases to `r 100*round(summary(fit_wt_am)$r.squared,2)`% of variance explained. 
+I then investigated if the model could be improved by adding an interaction term between weight and transmission type. This model indicates that the relationship between weight and mpg is different between automatic and manual cars, with a stronger negative relationship for manual transmission cars. The R-squared now increases to `r 100*round(summary(fit_wt_am)$r.squared,2)`% of variance explained. 
 
 ```{r wt_am_model, echo=FALSE, fig.height=4, fig.width=8}
-kable(summary(fit_wt_am)$coef)
+#kable(summary(fit_wt_am)$coef)
 
 fit_wt_am_qsec <- lm(mpg~wt*am+qsec, mtcars)
 fit_wt_am_all <- lm(mpg~wt*am+., mtcars)
@@ -178,7 +140,7 @@ a<-anova(fit_wt, fit_wt_am, fit_wt_am_qsec, fit_wt_am_all)
 
 Based on the results from the exploratory analysis I will also add the variable qsec, which was the variable with the lowest correlation with weight. In addition to this, I will construct a model that uses all variables. 
 
-Table 4 displays the R-squared for these 4 models as well as the p value generated by an anova analysis comparing the models. 
+Table 1 displays the R-squared for these 4 models as well as the p value generated by an anova analysis comparing the models. 
 
 Model name| Included variables|R-squared (%)| PR(>F)
 ------------- | -------------|-------------|-------------------
@@ -187,15 +149,21 @@ fit_wt_am | weight \* transmissiontype| `r 100*round(summary(fit_wt_am)$r.square
 fit_wt_am_qsec | weight \* transmissiontype + qsec| `r 100*round(summary(fit_wt_am_qsec)$r.squared,2)`|`r a[3,6]`
 fit_wt_am_all | weight \* transmissiontype + all remaining variables| `r 100*round(summary(fit_wt_am_all)$r.squared,2)`|`r a[4,6]`
 
-We can see from this analysis that there is no evidence that including all variables gives us a more accurate model than the one we get when including only weight, transmission type and qsec. It can be noted that they both have an R-squared of 90%. Based on these results, I will select model number three. The coefficients of this model are:
+We can see from this analysis that there is no evidence that including all variables gives us a more accurate model than the one we get when including only weight, transmission type and qsec. It can be noted that they both have an R-squared of 90%. Since both model number 3 and 4 explain the same amount of variance there is no reason to believe that adding more variables to the model would improve it and I will select model number 3. The coefficients for this model are:
 
-```{r qsec_model, echo=FALSE, fig.height=6, fig.width=6}
+```{r qsec_model, echo=FALSE, fig.height=6, fig.width=6, warning=FALSE}
 kable(summary(fit_wt_am_qsec)$coef)
 ```
 
-## Is there a significant difference in mpg between automatic and manual transmission cars
+Showing that a greater value of qsec (acceleration) will increase fuel consumption. As in model 2, we see that the connection between MPG and transmission type depends on the weight of the car. For automatic cars, MPG decreases with  `r round(summary(fit_wt_am_qsec)$coeff[2,1],2)` for every 1000 lb increase in weight, and for manual cars MPG decreases with `r round(summary(fit_wt_am_qsec)$coeff[2,1]+summary(fit_wt_am_qsec)$coeff[5,1],2)` for every 1000 lb increase. 
 
-Under the selected model, there is a difference in estimated mpg between automatic and manual cars. If weight and qsec is held constant, manual cars are expected to have a mpg of `r round(summary(fit_wt_am_qsec)$coeff[3,1],1)` more than automatic cars. The difference in mpg between automatic and manual cars is significant with p=`r round(summary(fit_wt_am_qsec)$coeff[3,4],4)`. 
+## Difference in mpg between automatic and manual transmission cars
+
+According to our model, the dependance of MPG on transmission type interacts with the weight of the cars. Due to this, it is difficult to determine the effect of only transmission. The `r round(summary(fit_wt_am_qsec)$coeff[3,1],1)` offset for manual transmission compared to automatic transmission only applies to cars with weight = 0, and so does not tell us much. For cars with weights within the span of the analysed cars.   
+
+Todo:
+- plot MPG difference for cars when taking away the effect of weight and qsec
+- plot how MPG changes with weight for a/m cars
 
 What to do about dependence of weight on mpg for automatic/non-automatic?
 
@@ -218,22 +186,13 @@ m <- coefs[1]+coefs[2]*w+coefs[3]+qs*coefs[4]+w*coefs[5]
 ## Diagnostics of model 
 There is no obvious pattern in the residuals, the model does not seem to be biased. There is no single data point that has an extreme influence on the model. 
 
-```{r diagnostics2, echo=FALSE, fig.height=6, fig.width=6}
+```{r diagnostics2, echo=FALSE, fig.height=5, fig.width=5}
 par(mfrow=c(2,2))
 plot(fit_wt_am_qsec, pch=20, col="darkblue")
 ```
-```{r hatvalues, echo=FALSE, fig.height=3, fig.width=3}
-par(mfrow=c(1,1))
-hist(hatvalues(fit_wt_am_qsec), col="darkblue")
-```
 
 
-TODO: 
 
-- Investigate outliers? 
-- Remove effect of weight and plot mpg for automatic/manual to show that we can't see a difference 
-- Write executive summary
-- Expand on the diagnostocs of the model
 
 
 
