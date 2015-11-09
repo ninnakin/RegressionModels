@@ -1,0 +1,264 @@
+---
+title: "Factors impacting fuel consumption- a regression analysis"
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+    keep_md: yes
+---
+## Executive summary
+
+Though there is a difference in fuel consumption between automatic cars, this difference is explained by automatic cars being heavier than manual cars. The impact of the type of transmission for cars of the same weight is negligible for the analysed cars. If one wants to maximize miles per gallon focus should be on decreasing the weight of the car. 
+
+## Data 
+I have explored the mtcars data set, which contains information on fuel consumption in miles per gallon (MPG) and 10 aspects of car design and performance for 32 car models. The data set is described in the [R documentation](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/mtcars.html). All variables were treated as numerical values except the engine (V/S) and transmission (A/M) types. 
+
+```{r transformations, echo=FALSE, fig.height=5, fig.width=5}
+data("mtcars")
+
+mtcars$am <- as.factor(mtcars$am)
+levels(mtcars$am)<-c("Automatic","Manual")
+# motor type as factor 
+mtcars$vs <- as.factor(mtcars$vs)
+levels(mtcars$vs)<-c("V","S")
+```
+
+## Exploratory analysis
+I performed an exploratory analysis to investigate the properties of the data and get a first insight into what affects the fuel consumption and the differences between automatic and manual transmission. 
+
+At first glance (Figure 1), it seems that transmission type has a clear effect on the fuel consumption, but it is possible that this apparent connection is driven by other variables. From figure 2 we see that fuel consumption for automatic cars (pink dots) is higher than that of manual cars, but we can also see that automatic cars tend to be heavier than manual cars (Figure 3). Taking this into account, automatic cars do not seem to have higher fuel consumption than manual cars of similar weight. The black line shows the result of fitting a linear regression model for MPG depending only on weight. This simple model seems to capture the patterns for both automatic and manual cars reasonably well, but are there other traits of the data that could tell us more about the MPG?
+
+```{r explore_transmission, echo=FALSE, fig.height=2.5, fig.width=3.5, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(dplyr)
+
+#ggplot(data=mtcars, aes(x=am, y=mpg, fill=am))+geom_boxplot()+ggtitle("Fig 1. MPG by transmission type")
+``` 
+
+```{r explore_weight, echo=FALSE, fig.height=2.5, fig.width=8, message=FALSE, warning=FALSE}
+library(gridExtra)
+fit_wt<-lm(mpg~wt, mtcars)
+
+# g1 <- ggplot(data=mtcars,aes(x=wt, y=mpg, color=am))+geom_point(size=2)+ 
+#     geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)+
+#     ggtitle("Fig 2. MPG by weight")+theme(legend.position="none")
+# 
+# g2<-ggplot(data=mtcars, aes(x=wt, fill=am))+geom_histogram(col=1, binwidth=0.25)+ggtitle("Fig 3. Weight distribution")
+# 
+# grid.arrange(g1, g2, ncol=2)
+``` 
+
+Figures 4-13 explore the relationship between the different variables and MPG. Both number of cylinders and and engine type (V/S) (Figures 4-7) look related to MPG when looking at them alone, but when also considering weight, it is not so clear anymore. Figures 8-13 explore the relationship between MPG and the variables displacement, horse power, read axle ratio, qsec, number of gears and number of carburetors. I have also computed the correlation between each variable and weight. Again, pink dots represent cars with automatic transmission and blue ones those with manual transmission. 
+
+```{r explore_cylinders, echo=FALSE, fig.height=2.5, fig.width=8, warning=FALSE, message=FALSE}
+n<-names(mtcars)
+wt_cor <- sapply(n[!n=="am" & !n=="wt"], function(x) round(cor(mtcars$wt, as.numeric(mtcars[,x] )),2))
+
+# g1<-ggplot(data=mtcars,aes(x=wt, y=mpg, color=as.factor(cyl)))+geom_point(size=2)+ 
+#     geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)+
+#     ggtitle("Fig 5.No. cyl. and wt regression line")
+# g2<-ggplot(data=mtcars, aes(x=as.factor(cyl), y=mpg, fill=as.factor(cyl)))+
+#     geom_boxplot()+theme(legend.position="none")+
+#     ggtitle("Fig. 4 MPG by no. of cyl.")
+# 
+# grid.arrange(g2, g1, ncol=2)
+``` 
+
+```{r explore_vs, echo=FALSE, fig.height=2.5, fig.width=8, warning=FALSE, message=FALSE}
+
+# g3<-ggplot(data=mtcars,aes(x=wt, y=mpg, color=vs))+geom_point(size=2)+ 
+#     geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)+
+#     ggtitle("Fig 7. Engine type and wt regression line")
+# g4<-ggplot(data=mtcars, aes(x=vs, y=mpg, fill=vs))+geom_boxplot()+
+#     theme(legend.position="none")+
+#     ggtitle("Fig 6. MPG by engine type (V/S)")
+# 
+# grid.arrange(g4, g3, ncol=2)
+``` 
+
+```{r explore_remaining, echo=FALSE, fig.height=5, fig.width=8, warning=FALSE, message=FALSE}
+
+# plot_theme <- theme(legend.position="none", plot.title = element_text(size=8))
+# 
+# # disp
+# g1 <- ggplot(data=mtcars,aes(x=disp, y=mpg, color=am))+ geom_point(size=2)+plot_theme+
+#     ggtitle(paste("Correlation with weight:", wt_cor["disp"]))
+# # hp
+# g2 <- ggplot(data=mtcars,aes(x=hp, y=mpg, color=am))+ geom_point(size=2)+plot_theme+
+#     ggtitle(paste("Correlation with weight:", wt_cor["hp"]))
+# # drat
+# g3 <- ggplot(data=mtcars,aes(x=drat, y=mpg, color=am))+ plot_theme + geom_point(size=2)+
+#     ggtitle(paste("Correlation with weight:", wt_cor["drat"]))
+# # qsec
+# g4 <- ggplot(data=mtcars,aes(x=qsec, y=mpg, color=am))+ plot_theme + geom_point(size=2)+
+#     ggtitle(paste("Correlation with weight:", wt_cor["qsec"]))
+# # gear
+# g5 <- ggplot(data=mtcars,aes(x=gear, y=mpg, color=am))+ plot_theme + geom_point(size=2)+
+#     ggtitle(paste("Correlation with weight:", wt_cor["gear"]))
+# # carb
+# g6 <- ggplot(data=mtcars,aes(x=carb, y=mpg, color=am))+ plot_theme + geom_point(size=2)+
+#     ggtitle(paste("Correlation with weight:", wt_cor["carb"]))
+# 
+# grid.arrange(g1, g2, g3, g4, g5, g6, ncol=3)
+``` 
+
+## Finding a representative model of the data 
+
+Based on the strong relationship between weight and MPG identified, I constructed a linear regression model of MPG depending on weight, which gives us a negative relationship (slope = `r round(summary(fit_wt)$coef[2])`) between MPG and weight. The R-squared for this model is `r round(summary(fit_wt)$r.squared,2)`. We can interpret this as 'weight explains `r 100*round(summary(fit_wt)$r.squared,2)`% of the variance of MPG in the data'.  
+
+```{r wt_model, echo=FALSE, fig.height=4, fig.width=8, warning=FALSE, message=FALSE}
+library(knitr)
+fit_am <- lm(mpg~am, mtcars)
+fit_wt<-lm(mpg~wt, mtcars)
+#kable(summary(fit_wt)$coef)
+
+fit_wt_am <- lm(mpg~wt*am, mtcars)
+``` 
+
+I then investigated if the model could be improved by adding an interaction term between weight and transmission. Model 2 indicates that the relationship between weight and MPG is different between automatic and manual cars, with a stronger negative relationship for manual cars. The R-squared now increases to `r 100*round(summary(fit_wt_am)$r.squared,2)`% of variance explained. 
+
+```{r wt_am_model, echo=FALSE, fig.height=4, fig.width=8}
+#kable(summary(fit_wt_am)$coef)
+
+fit_wt_am_qsec <- lm(mpg~wt*am+qsec, mtcars)
+fit_wt_am_all <- lm(mpg~wt*am+., mtcars)
+
+a<-anova(fit_wt, fit_wt_am, fit_wt_am_qsec, fit_wt_am_all)
+```
+
+Based on the results from the exploratory analysis I added the variable qsec, the variable with the lowest correlation with weight (model 3). In addition to this, I constructed a model that uses all variables (model 4). The below table displays the R-squared for these 4 models as well as the p value generated by an anova analysis comparing the models. 
+
+Model name| Included variables|R-squared (%)| PR(>F) 
+------------- | -------------|-------------|-------------------
+fit_wt | weight| `r 100*round(summary(fit_wt)$r.squared,2)`| 
+fit_wt_am | weight \* transmissiontype| `r 100*round(summary(fit_wt_am)$r.squared,2)`|`r a[2,6]`
+fit_wt_am_qsec | weight \* transmissiontype + qsec| `r  100*round(summary(fit_wt_am_qsec)$r.squared,2)`|`r a[3,6]` 
+fit_wt_am_all | weight \* transmissiontype + all remaining variables| `r  100*round(summary(fit_wt_am_all)$r.squared,2)`|`r a[4,6]` 
+
+
+Anova analysis shows no evidence that including all variables would give us a more accurate model than the one we get when including only weight, transmission type and qsec. Since both model number 3 and 4 explain the same amount of variance (90%) there is no reason to believe that adding more variables to the model would improve it and I will select model number 3. The coefficients for this model are:
+
+```{r qsec_model, echo=FALSE, fig.height=6, fig.width=6, warning=FALSE}
+kable(summary(fit_wt_am_qsec)$coef)
+```
+
+Showing that a greater value of qsec (slower acceleration) will increase MPG. As in model 2, we see that the connection between MPG and transmission type depends on the weight of the car. For automatic cars, MPG decreases with  `r round(summary(fit_wt_am_qsec)$coeff[2,1],2)` for every 1000 lb increase in weight, and for manual cars MPG decreases with `r round(summary(fit_wt_am_qsec)$coeff[2,1]+summary(fit_wt_am_qsec)$coeff[5,1],2)` for every 1000 lb increase (when holding qsec constant). 
+
+## Difference in MPG between automatic and manual transmission cars
+
+According to our model, the dependence of MPG on transmission type interacts with the weight of the cars. Due to this, it is difficult to determine the effect of only transmission. The `r round(summary(fit_wt_am_qsec)$coeff[3,1],1)` offset for manual compared to automatic transmission only applies to cars with weight = 0, and so does not tell us much. For cars with weights within the span of the analysed cars the MPG values overlap each other. Figure 14 illustrates this by plotting the dependence of MPG on weight for automatic and manual cars.
+
+```{r diagnostics, echo=FALSE, fig.height=3, fig.width=4}
+
+a <- filter(mtcars, am=="Automatic")
+m <- filter(mtcars, am=="Manual") 
+
+fit_a <- lm(data=a, mpg~wt)  
+fit_m <- lm(data=m, mpg~wt)  
+
+#ggplot(mtcars, aes(wt, mpg, color=am))+geom_point(size=2) +
+#  geom_smooth(method="lm", lwd=1)+ggtitle("Figure 14")
+
+```
+
+## Diagnostics of model 
+There is no obvious pattern in the residuals, so the model does not seem to be biased. The Q-Q plot (figure 15) suggests that the residuals are approximately normally distributed. There is no single data point that has an extreme influence on the model. All in all, the diagnostics indicate that this is a reliable model.  
+
+## Appendix 
+
+```{r Fig1, echo=FALSE, fig.height=2.7, fig.width=3.5, warning=FALSE, message=FALSE}
+ggplot(data=mtcars, aes(x=am, y=mpg, fill=am))+geom_boxplot()+
+  ggtitle("Fig 1. MPG by transm. type")+
+  theme(plot.title = element_text(size=10))
+``` 
+
+```{r Fig2, echo=FALSE, fig.height=3, fig.width=8, message=FALSE, warning=FALSE}
+g1 <- ggplot(data=mtcars,aes(x=wt, y=mpg, color=am))+geom_point(size=2)+ 
+     geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)+
+     ggtitle("Fig 2. MPG by weight")+theme(legend.position="none",plot.title = element_text(size=12))
+ 
+g2<-ggplot(data=mtcars, aes(x=wt, fill=am))+
+  geom_histogram(col=1, binwidth=0.25)+ggtitle("Fig 3. Weight distribution")+
+  theme(plot.title = element_text(size=12))
+
+grid.arrange(g1, g2, ncol=2)
+``` 
+
+```{r Fig4, echo=FALSE, fig.height=3, fig.width=8, warning=FALSE, message=FALSE}
+n<-names(mtcars)
+wt_cor <- sapply(n[!n=="am" & !n=="wt"], function(x) round(cor(mtcars$wt, as.numeric(mtcars[,x] )),2))
+
+g1<-ggplot(data=mtcars,aes(x=wt, y=mpg, color=as.factor(cyl)))+geom_point(size=2)+ 
+    geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)+
+    ggtitle("Fig 5.No. cyl. and wt regression line")+
+    theme(plot.title = element_text(size=12))
+g2<-ggplot(data=mtcars, aes(x=as.factor(cyl), y=mpg, fill=as.factor(cyl)))+
+    geom_boxplot()+theme(legend.position="none",plot.title = element_text(size=12))+
+    ggtitle("Fig. 4 MPG by no. of cyl.")
+
+grid.arrange(g2, g1, ncol=2)
+``` 
+
+```{r Fig6, echo=FALSE, fig.height=3, fig.width=8, warning=FALSE, message=FALSE}
+g3<-ggplot(data=mtcars,aes(x=wt, y=mpg, color=vs))+geom_point(size=2)+ 
+    geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)+
+    ggtitle("Fig 7. Engine type and wt regression line")+theme(plot.title = element_text(size=12))
+g4<-ggplot(data=mtcars, aes(x=vs, y=mpg, fill=vs))+geom_boxplot()+
+    theme(legend.position="none",plot.title = element_text(size=12))+
+    ggtitle("Fig 6. MPG by engine type (V/S)")
+
+grid.arrange(g4, g3, ncol=2)
+``` 
+
+```{r Fig8, echo=FALSE, fig.height=5, fig.width=8, warning=FALSE, message=FALSE}
+
+plot_theme <- theme(legend.position="none", plot.title = element_text(size=9))
+
+# disp
+g1 <- ggplot(data=mtcars,aes(x=disp, y=mpg, color=am))+ geom_point(size=2)+plot_theme+
+    ggtitle(paste("Correlation with weight:", wt_cor["disp"]))
+# hp
+g2 <- ggplot(data=mtcars,aes(x=hp, y=mpg, color=am))+ geom_point(size=2)+plot_theme+
+    ggtitle(paste("Correlation with weight:", wt_cor["hp"]))
+# drat
+g3 <- ggplot(data=mtcars,aes(x=drat, y=mpg, color=am))+ plot_theme + geom_point(size=2)+
+    ggtitle(paste("Correlation with weight:", wt_cor["drat"]))
+# qsec
+g4 <- ggplot(data=mtcars,aes(x=qsec, y=mpg, color=am))+ plot_theme + geom_point(size=2)+
+    ggtitle(paste("Correlation with weight:", wt_cor["qsec"]))
+# gear
+g5 <- ggplot(data=mtcars,aes(x=gear, y=mpg, color=am))+ plot_theme + geom_point(size=2)+
+    ggtitle(paste("Correlation with weight:", wt_cor["gear"]))
+# carb
+g6 <- ggplot(data=mtcars,aes(x=carb, y=mpg, color=am))+ plot_theme + geom_point(size=2)+
+    ggtitle(paste("Correlation with weight:", wt_cor["carb"]))
+
+grid.arrange(g1, g2, g3, g4, g5, g6, ncol=3)
+``` 
+
+```{r Fig14, echo=FALSE, fig.height=3, fig.width=4}
+
+a <- filter(mtcars, am=="Automatic")
+m <- filter(mtcars, am=="Manual") 
+
+fit_a <- lm(data=a, mpg~wt)  
+fit_m <- lm(data=m, mpg~wt)  
+
+ggplot(mtcars, aes(wt, mpg, color=am))+geom_point(size=2) +
+  geom_smooth(method="lm", lwd=0.5)+ggtitle("Figure 14: MPG by weight for A/M cars")+
+  theme(plot.title = element_text(size=10))
+
+```
+
+```{r Fig 15, echo=FALSE, fig.height=5, fig.width=5}
+par(mfrow=c(2,2))
+plot(fit_wt_am_qsec, pch=20, col="darkblue")
+```
+
+```{r Fig 16, echo=FALSE, fig.height=3, fig.width=4}
+res <- as.data.frame(residuals(fit_wt_am_qsec))
+
+#ggplot(data=res, aes(`residuals(fit_wt_am_qsec)`))+geom_histogram(fill="darkblue", col="steelblue", binwidth=0.25)+ggtitle("Figure 16: Histogram over the residuals")+
+#  theme(plot.title = element_text(size=10))
+
+```
