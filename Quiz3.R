@@ -28,3 +28,19 @@ fit_ad <- lm(mpg~as.factor(cyl)+wt,data=mtcars)
 fit_int <- lm(mpg~as.factor(cyl)*wt,data=mtcars)
 anova(fit_ad,fit_int)
 
+# Question 5
+# Give the hat diagonal for the most influential point
+x <- c(0.586, 0.166, -0.042, -0.614, 11.72)
+y <- c(0.549, -0.026, -0.127, -0.751, 1.344)
+
+fit <- lm(y~x)
+plot(x, y, pch=19)
+points(x,predict(fit), type="l")
+
+hatvalues(fit)
+
+# Question 6
+# Give the slope dfbeta for the point with the highest hat value.
+dfbetas(fit)
+
+

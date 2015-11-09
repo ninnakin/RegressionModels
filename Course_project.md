@@ -1,23 +1,4 @@
 # Factors impacting miles per gallon - a regression analysis
-## Context
-
-You work for Motor Trend, a magazine about the automobile industry. Looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions:
-
-"Is an automatic or manual transmission better for MPG"
-"Quantify the MPG difference between automatic and manual transmissions"
-
-### Question
-
-Take the mtcars data set and write up an analysis to answer their question using regression models and exploratory data analyses.
-
-### Points to be evaluated
-
-- Did the student interpret the coefficients correctly?
-- Did the student fit multiple models and detail their strategy for model selection?
-- Did the student answer the questions of interest or detail why the question(s) is (are) not answerable?
-- Did the student do a residual plot and some diagnostics?
-- Did the student quantify the uncertainty in their conclusions and/or perform an inference correctly?
-
 ## Executive summary
 
 Though there is a difference in fuel consumption between automatic cars, this difference is explained by automatic cars being heavier than manual cars. The impact of the type of transmission for cars of the same weight is neglible for the analysed cars. If one wants to maximize miles per gallon focus should be layed on decreasing the weight of the car. 
@@ -30,7 +11,7 @@ I have explored the mtcars data set, a data set containing information on fuel c
 - Gross horsepower (hp)
 - Rear axle ratio 
 - Weight (lb/1000)
-- qseq 1/4 mile time
+- Acceleration, qsec 1/4 mile time
 - Type of engine (straight or V-engine)
 - Automatic or manual transmission
 - Number of forward gears
@@ -43,11 +24,16 @@ All of these aspects will be treated as numerical values except the engine and t
 ## Exploratory analysis
 I performed an exploratory analysis to investigate the properties of the data and get a first insight into what affects the fuel consumption and the differences between automatic and manual transmission. 
 
+At first glance (Figure 1), it seems that transmission type has a clear effect on the fuel consumption. But it is possible that this apparent connection is driven by other properties of the cars. Figure 2 shows the relationship between weight and fuel consumption. As shown by the previous plot, fuel consumption for automatic cars (pink dots) is higher than that of manual cars, but we can also see that automatic cars tend to be heavier than manual cars. We can see from the weight histogram (Figure 3) that automatic cars are heavier than manual cars, with only a small overlap in weight. 
+
 ![](Course_project_files/figure-html/explore_transmission-1.png) 
 
-At first glance, it seems that transmission type has a clear effect on the fuel consumption. But it is possible that this apparent connection is driven by other properties of the cars. Figure X shows the relationship between weight and fuel consumption. As shown by the previous plot, fuel consumption for automatic cars (pink dots) is higher than that of manual cars, but we can also see that automatic cars tend to be heavier than manual cars. We can see from the weight histogram that automatic cars are heavier than manual cars, with only a small oiverlap in weight. 
-
 Taking this into account, automatic cars do not seem to have higher fuel consumption than manual cars of similar weight. The black line shows the result of fitting a linear regression model for mpg depending only on weight. This simple model seems to capture the patterns for both automatic and manual cars reasonably well, but are there other traits of the data that could tell us more about the mpg?
+
+
+```
+## Warning: package 'gridExtra' was built under R version 3.2.2
+```
 
 ![](Course_project_files/figure-html/explore_weight-1.png) 
 
@@ -63,27 +49,17 @@ The following 6 figures explore the relationship between mpg and the remaining 6
 
 ## Finding a representative model of the data 
 
-Based on the strong relationship between weight and mpg identified, I will construct a linear regression model of mpg depending on weight. This is the same model already used in the exploratory analysis, and as we saw in that section, it gives us a negative relationship (slope = -5) between the mpg and weight. The R-squared for this model is 0.75. We can interpret this as 'weight explains 75% of the variance of mpg in the data'.  
+Based on the strong relationship between weight and MPG identified, I constructed a linear regression model of mpg depending on weight. This is the same model already used in the exploratory analysis, and as we saw in that section, it gives us a negative relationship (slope = -5) between the MPG and weight. The R-squared for this model is 0.75. We can interpret this as 'weight explains 75% of the variance of MPG in the data'.  
 
 
-                Estimate   Std. Error     t value   Pr(>|t|)
-------------  ----------  -----------  ----------  ---------
-(Intercept)    37.285126     1.877627   19.857575          0
-wt             -5.344472     0.559101   -9.559044          0
 
-I will now investigate if adding an interaction term between weight and transmission type to this model will improve it. The characteristics for this model can be seen in table 2. This model indicates that the relationship between weight and mpg is different between automatic and manual cars, with a stronger negative relationship for manual transmission cars. The R-squared now increases to 83% of variance explained. 
+I then investigated if the model could be improved by adding an interaction term between weight and transmission type. This model indicates that the relationship between weight and mpg is different between automatic and manual cars, with a stronger negative relationship for manual transmission cars. The R-squared now increases to 83% of variance explained. 
 
 
-                Estimate   Std. Error     t value    Pr(>|t|)
-------------  ----------  -----------  ----------  ----------
-(Intercept)    31.416055    3.0201093   10.402291   0.0000000
-wt             -3.785907    0.7856478   -4.818836   0.0000455
-amManual       14.878422    4.2640422    3.489276   0.0016210
-wt:amManual    -5.298361    1.4446993   -3.667449   0.0010171
 
 Based on the results from the exploratory analysis I will also add the variable qsec, which was the variable with the lowest correlation with weight. In addition to this, I will construct a model that uses all variables. 
 
-Table 4 displays the R-squared for these 4 models as well as the p value generated by an anova analysis comparing the models. 
+Table 1 displays the R-squared for these 4 models as well as the p value generated by an anova analysis comparing the models. 
 
 Model name| Included variables|R-squared (%)| PR(>F)
 ------------- | -------------|-------------|-------------------
@@ -92,7 +68,7 @@ fit_wt_am | weight \* transmissiontype| 83|0.0026919
 fit_wt_am_qsec | weight \* transmissiontype + qsec| 90|0.0019822
 fit_wt_am_all | weight \* transmissiontype + all remaining variables| 90|0.9939286
 
-We can see from this analysis that there is no evidence that including all variables gives us a more accurate model than the one we get when including only weight, transmission type and qsec. It can be noted that they both have an R-squared of 90%. Since both model number 3 and 4 explain the same amount of variance there is no reason to believe that adding more variables to the model would improve it and I will select model number three. The coefficients of this model are:
+We can see from this analysis that there is no evidence that including all variables gives us a more accurate model than the one we get when including only weight, transmission type and qsec. It can be noted that they both have an R-squared of 90%. Since both model number 3 and 4 explain the same amount of variance there is no reason to believe that adding more variables to the model would improve it and I will select model number 3. The coefficients for this model are:
 
 
                 Estimate   Std. Error     t value    Pr(>|t|)
@@ -105,9 +81,13 @@ wt:amManual    -4.141376    1.1968119   -3.460340   0.0018086
 
 Showing that a greater value of qsec (acceleration) will increase fuel consumption. As in model 2, we see that the connection between MPG and transmission type depends on the weight of the car. For automatic cars, MPG decreases with  -2.94 for every 1000 lb increase in weight, and for manual cars MPG decreases with -7.08 for every 1000 lb increase. 
 
-## Is there a significant difference in mpg between automatic and manual transmission cars
+## Difference in mpg between automatic and manual transmission cars
 
-Under the selected model, there is a difference in estimated mpg between automatic and manual cars. If weight and qsec is held constant, manual cars are expected to have a mpg of 14.1 more than automatic cars. The difference in mpg between automatic and manual cars is significant with p=3\times 10^{-4}. 
+According to our model, the dependance of MPG on transmission type interacts with the weight of the cars. Due to this, it is difficult to determine the effect of only transmission. The 14.1 offset for manual transmission compared to automatic transmission only applies to cars with weight = 0, and so does not tell us much. For cars with weights within the span of the analysed cars.   
+
+Todo:
+- plot MPG difference for cars when taking away the effect of weight and qsec
+- plot how MPG changes with weight for a/m cars
 
 What to do about dependence of weight on mpg for automatic/non-automatic?
 
@@ -121,14 +101,9 @@ There is some difference between manual and automatic cars, where the dependence
 There is no obvious pattern in the residuals, the model does not seem to be biased. There is no single data point that has an extreme influence on the model. 
 
 ![](Course_project_files/figure-html/diagnostics2-1.png) 
-![](Course_project_files/figure-html/hatvalues-1.png) 
 
 
-TODO: 
 
-- Investigate outliers? 
-- Remove effect of weight and plot mpg for automatic/manual to show that we can't see a difference 
-- Expand on the diagnostics of the model
 
 
 

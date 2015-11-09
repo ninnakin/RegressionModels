@@ -1,10 +1,10 @@
 ---
 title: "Factors impacting miles per gallon - a regression analysis"
 output:
-  word_document: default
-  pdf_document: default
   html_document:
     keep_md: yes
+  pdf_document: default
+  word_document: default
 ---
 ## Executive summary
 
@@ -43,7 +43,6 @@ At first glance (Figure 1), it seems that transmission type has a clear effect o
 
 ```{r explore_transmission, echo=FALSE, fig.height=2.5, fig.width=3.5, warning=FALSE, message=FALSE}
 library(ggplot2)
-library(GGally)
 library(dplyr)
 
 ggplot(data=mtcars, aes(x=am, y=mpg, fill=am))+geom_boxplot()+ggtitle("MPG by transmission type")
@@ -67,18 +66,26 @@ grid.arrange(g1, g2, ncol=2)
 From the plots exploring the relationship between the different variables and mpg I can not dismiss a relationship between any of them and mpg, but I can also not be sure of any relationships. Both number of cylinders and and engine type (V/S) look related to mpg when looking at them alone, but when also considering weight, it is not so clear anymore.   
 
 ```{r explore_cylinders, echo=FALSE, fig.height=2.5, fig.width=8, warning=FALSE, message=FALSE}
+n<-names(mtcars)
+wt_cor <- sapply(n[!n=="am" & !n=="wt"], function(x) round(cor(mtcars$wt, as.numeric(mtcars[,x] )),2))
+
 g1<-ggplot(data=mtcars,aes(x=wt, y=mpg, color=as.factor(cyl)))+geom_point(size=2)+ 
-    geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)
-g2<-ggplot(data=mtcars, aes(x=as.factor(cyl), y=mpg, fill=as.factor(cyl)))+geom_boxplot()+theme(legend.position="none")
+    geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)+
+    ggtitle("No. cyl. and weight regression line")
+g2<-ggplot(data=mtcars, aes(x=as.factor(cyl), y=mpg, fill=as.factor(cyl)))+
+    geom_boxplot()+theme(legend.position="none")+
+    ggtitle("MPG by no. of cyl.")
 
 grid.arrange(g2, g1, ncol=2)
 ``` 
 
 ```{r explore_vs, echo=FALSE, fig.height=2.5, fig.width=8, warning=FALSE, message=FALSE}
 g3<-ggplot(data=mtcars,aes(x=wt, y=mpg, color=vs))+geom_point(size=2)+ 
-    geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)
+    geom_abline(intercept=summary(fit_wt)$coef[1,1], slope=summary(fit_wt)$coef[2,1], lwd=0.5)+
+    ggtitle("Engine type and weight regression line")
 g4<-ggplot(data=mtcars, aes(x=vs, y=mpg, fill=vs))+geom_boxplot()+
-    theme(legend.position="none")
+    theme(legend.position="none")+
+    ggtitle("MPG by engine type (V/S)")
 
 grid.arrange(g4, g3, ncol=2)
 ``` 
@@ -86,9 +93,6 @@ grid.arrange(g4, g3, ncol=2)
 The following 6 figures explore the relationship between mpg and the remaining 6 variables, displacement, horse power, read axle ratio, qsec, number of gears and number of carburetors. I have also computed the correlation between each variable and weight. Again, pink dots represent cars with automatic transmission and blue ones those with manual transmission. 
 
 ```{r explore_remaining, echo=FALSE, fig.height=5, fig.width=8, warning=FALSE, message=FALSE}
-
-n<-names(mtcars)
-wt_cor <- sapply(n[!n=="am" & !n=="wt"], function(x) round(cor(mtcars$wt, as.numeric(mtcars[,x] )),2))
 
 plot_theme <- theme(legend.position="none", plot.title = element_text(size=8))
 
@@ -118,7 +122,7 @@ grid.arrange(g1, g2, g3, g4, g5, g6, ncol=3)
 
 Based on the strong relationship between weight and MPG identified, I constructed a linear regression model of mpg depending on weight. This is the same model already used in the exploratory analysis, and as we saw in that section, it gives us a negative relationship (slope = `r round(summary(fit_wt)$coef[2])`) between the MPG and weight. The R-squared for this model is `r round(summary(fit_wt)$r.squared,2)`. We can interpret this as 'weight explains `r 100*round(summary(fit_wt)$r.squared,2)`% of the variance of MPG in the data'.  
 
-```{r wt_model, echo=FALSE, fig.height=4, fig.width=8}
+```{r wt_model, echo=FALSE, fig.height=4, fig.width=8, warning=FALSE, message=FALSE}
 library(knitr)
 fit_am <- lm(mpg~am, mtcars)
 fit_wt<-lm(mpg~wt, mtcars)

@@ -46,7 +46,7 @@ points(wt_new, predict(fit, wt_new), pch=19, col='blue')
 predict(fit, wt_new, interval="predict")
 
 # Question 6
-# A “short” ton is defined as 2,000 lbs. Construct a 95% 
+# A short ton is defined as 2,000 lbs. Construct a 95% 
 # confidence interval for the expected change in mpg per 1 
 # short ton increase in weight. Give the lower endpoint.
 
