@@ -8,7 +8,7 @@ output:
 ---
 ## Executive summary
 
-Though there is a difference in fuel consumption between automatic cars, this difference is explained by automatic cars being heavier than manual cars. The impact of the type of transmission for cars of the same weight is negligible for the analysed cars. If one wants to maximize miles per gallon focus should be on decreasing the weight of the car. 
+Though there is a difference in fuel consumption between automatic and manual transmission cars, this difference is explained by automatic cars being heavier than manual cars. The impact of the type of transmission for cars of the same weight is negligible for the analysed cars. If one wants to maximize miles per gallon focus should be on decreasing the weight of the car. 
 
 ## Data 
 I have explored the mtcars data set, which contains information on fuel consumption in miles per gallon (MPG) and 10 aspects of car design and performance for 32 car models. The data set is described in the [R documentation](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/mtcars.html). All variables were treated as numerical values except the engine (V/S) and transmission (A/M) types. 
@@ -48,7 +48,7 @@ fit_wt<-lm(mpg~wt, mtcars)
 # grid.arrange(g1, g2, ncol=2)
 ``` 
 
-Figures 4-13 explore the relationship between the different variables and MPG. Both number of cylinders and and engine type (V/S) (Figures 4-7) look related to MPG when looking at them alone, but when also considering weight, it is not so clear anymore. Figures 8-13 explore the relationship between MPG and the variables displacement, horse power, read axle ratio, qsec, number of gears and number of carburetors. I have also computed the correlation between each variable and weight. Again, pink dots represent cars with automatic transmission and blue ones those with manual transmission. 
+Figures 4-13 explore the relationship between the different variables and MPG. Both number of cylinders and and engine type (V/S) (Figures 4-7) look related to MPG when looking at them alone, but when also considering weight, it is not as clear. Figures 8-13 explore the relationship between MPG and the variables displacement, horse power, read axle ratio, qsec, number of gears and number of carburetors. I have also computed the correlation between each variable and weight. Again, pink dots represent cars with automatic transmission and blue ones those with manual transmission. 
 
 ```{r explore_cylinders, echo=FALSE, fig.height=2.5, fig.width=8, warning=FALSE, message=FALSE}
 n<-names(mtcars)
@@ -136,17 +136,17 @@ fit_wt_am_qsec | weight \* transmissiontype + qsec| `r  100*round(summary(fit_wt
 fit_wt_am_all | weight \* transmissiontype + all remaining variables| `r  100*round(summary(fit_wt_am_all)$r.squared,2)`|`r a[4,6]` 
 
 
-Anova analysis shows no evidence that including all variables would give us a more accurate model than the one we get when including only weight, transmission type and qsec. Since both model number 3 and 4 explain the same amount of variance (90%) there is no reason to believe that adding more variables to the model would improve it and I will select model number 3. The coefficients for this model are:
+Anova analysis shows no evidence that including all variables would give us a more accurate model than the one we get when including only weight, transmission type and qsec. Both model number 3 and 4 explain the same amount of variance (90%). Based on this, I will select model number 3. The coefficients for this model are:
 
 ```{r qsec_model, echo=FALSE, fig.height=6, fig.width=6, warning=FALSE}
 kable(summary(fit_wt_am_qsec)$coef)
 ```
 
-Showing that a greater value of qsec (slower acceleration) will increase MPG. As in model 2, we see that the connection between MPG and transmission type depends on the weight of the car. For automatic cars, MPG decreases with  `r round(summary(fit_wt_am_qsec)$coeff[2,1],2)` for every 1000 lb increase in weight, and for manual cars MPG decreases with `r round(summary(fit_wt_am_qsec)$coeff[2,1]+summary(fit_wt_am_qsec)$coeff[5,1],2)` for every 1000 lb increase (when holding qsec constant). 
+From this model we can see that a greater value of qsec (slower acceleration) will increase MPG. As in model 2, we see that the connection between MPG and transmission type depends on the weight of the car. For automatic cars, MPG decreases with  `r round(summary(fit_wt_am_qsec)$coeff[2,1],2)` for every 1000 lb increase in weight, and for manual cars MPG decreases with `r round(summary(fit_wt_am_qsec)$coeff[2,1]+summary(fit_wt_am_qsec)$coeff[5,1],2)` for every 1000 lb increase (when holding qsec constant). 
 
 ## Difference in MPG between automatic and manual transmission cars
 
-According to our model, the dependence of MPG on transmission type interacts with the weight of the cars. Due to this, it is difficult to determine the effect of only transmission. The `r round(summary(fit_wt_am_qsec)$coeff[3,1],1)` offset for manual compared to automatic transmission only applies to cars with weight = 0, and so does not tell us much. For cars with weights within the span of the analysed cars the MPG values overlap each other. Figure 14 illustrates this by plotting the dependence of MPG on weight for automatic and manual cars.
+According to our model, the dependence of MPG on transmission type interacts with the weight of the cars. Due to this, it is difficult to determine the effect of only transmission. The `r round(summary(fit_wt_am_qsec)$coeff[3,1],1)` offset for manual compared to automatic transmission only applies to cars with weight = 0, and so does not tell us much. For cars with weights within the span of the analysed cars the MPG values overlap each other. Figure 14 illustrates this by plotting the dependence of MPG on weight for automatic and manual cars. Based on my results, I can not confirm a relationship between transmission type and MPG. 
 
 ```{r diagnostics, echo=FALSE, fig.height=3, fig.width=4}
 
